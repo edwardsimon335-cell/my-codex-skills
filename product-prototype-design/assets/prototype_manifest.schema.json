@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deconstruct.local/schemas/product-prototype-v2.json",
+  "title": "DECONSTRUCT product prototype manifest V2",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "prototypeVersion",
+    "product",
+    "baselineAppVersion",
+    "implementationStatus",
+    "coordinateSystem",
+    "coordinateSpaces",
+    "renderingPolicy",
+    "interactionGuidelines",
+    "responsiveRules",
+    "shared",
+    "screens"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "prototypeVersion": { "type": "string", "minLength": 1 },
+    "product": { "const": "DECONSTRUCT" },
+    "baselineAppVersion": { "const": "0.1.1+5" },
+    "implementationStatus": { "const": "design_spec_not_implemented" },
+    "coordinateSystem": {
+      "type": "object",
+      "required": ["unit", "origin", "canvas", "safeArea"],
+      "properties": {
+        "unit": { "const": "logical_pt" },
+        "origin": { "const": "top_left" },
+        "canvas": { "$ref": "#/$defs/size" },
+        "safeArea": {
+          "type": "object",
+          "required": ["top", "bottom", "left", "right"],
+          "additionalProperties": { "type": "number" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "coordinateSpaces": {
+      "type": "object",
+      "required": ["viewport", "scrollContent", "overlay"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["description", "origin"]
+      }
+    },
+    "renderingPolicy": { "type": "object" },
+    "interactionGuidelines": { "type": "object" },
+    "responsiveRules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "appliesTo", "rule"]
+      }
+    },
+    "shared": {
+      "type": "object",
+      "required": ["components"],
+      "properties": {
+        "components": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/component" }
+        }
+      }
+    },
+    "screens": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/screen" }
+    }
+  },
+  "$defs": {
+    "size": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "rect": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number", "exclusiveMinimum": 0 },
+        { "type": "number", "exclusiveMinimum": 0 }
+      ],
+      "items": false,
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "element": {
+      "type": "object",
+      "required": ["id", "type", "rect", "coordinateSpace", "accuracy", "description"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "type": { "type": "string", "minLength": 1 },
+        "rect": { "$ref": "#/$defs/rect" },
+        "coordinateSpace": { "enum": ["viewport", "scrollContent", "overlay"] },
+        "accuracy": { "enum": ["design_spec", "dynamic", "legacy_measured"] },
+        "description": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "hotspot": {
+      "type": "object",
+      "required": ["id", "rect", "coordinateSpace", "accuracy", "role", "label", "action"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "rect": { "$ref": "#/$defs/rect" },
+        "coordinateSpace": { "enum": ["viewport", "scrollContent", "overlay"] },
+        "accuracy": { "enum": ["design_spec", "dynamic", "legacy_measured"] },
+        "role": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 },
+        "targetScreen": { "type": "string" },
+        "targetState": { "type": "string" },
+        "preserve": { "type": "array", "items": { "type": "string" } },
+        "enabledWhen": { "type": "string" },
+        "allowsOverlapWith": { "type": "array", "items": { "type": "string" } },
+        "clippedBy": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "component": {
+      "type": "object",
+      "required": ["elements", "hotspots"],
+      "properties": {
+        "fixed": { "type": "boolean" },
+        "elements": { "type": "array", "items": { "$ref": "#/$defs/element" } },
+        "hotspots": { "type": "array", "items": { "$ref": "#/$defs/hotspot" } }
+      },
+      "additionalProperties": true
+    },
+    "state": {
+      "type": "object",
+      "required": ["id", "title", "prototypeFile", "contentHeight", "accuracy", "elements", "hotspots"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "prototypeFile": { "type": "string", "pattern": "^pages/[a-z0-9-]+\\.svg$" },
+        "contentHeight": { "type": "number", "minimum": 852 },
+        "scrollRegion": { "$ref": "#/$defs/rect" },
+        "accuracy": { "const": "design_spec" },
+        "componentRefs": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^#/shared/components/[A-Za-z0-9]+$" }
+        },
+        "fieldLayout": {
+          "type": "object",
+          "required": ["mode", "baselineWidth", "fieldOrder", "dynamicTypePolicy"],
+          "properties": {
+            "mode": { "const": "single_column_fixed_order" },
+            "baselineWidth": { "type": "number", "exclusiveMinimum": 0 },
+            "fieldOrder": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+            },
+            "dynamicTypePolicy": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        },
+        "elements": { "type": "array", "items": { "$ref": "#/$defs/element" } },
+        "hotspots": { "type": "array", "items": { "$ref": "#/$defs/hotspot" } }
+      },
+      "additionalProperties": true
+    },
+    "screen": {
+      "type": "object",
+      "required": ["id", "title", "routeKind", "defaultState", "states"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "routeKind": { "enum": ["primary_destination", "secondary_route", "overlay"] },
+        "defaultState": { "type": "string" },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/state" }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "App Website SEO/GEO"
+  short_description: "Build multilingual SEO and AI-search-ready app sites"
+  default_prompt: "Use $app-site-seo-geo to audit and improve this app website for multilingual SEO and AI search."

@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>__PRODUCT_NAME__ 产品原型中文标注审查</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f2f2ef;
+      --paper: #ffffff;
+      --ink: #171717;
+      --muted: #64645f;
+      --border: #c9c9c2;
+      --element: #3f4a52;
+      --hotspot: #80591d;
+      --highlight: #fff0b8;
+      --highlight-strong: #d69019;
+      --canvas-width: 393px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body { background: var(--page); color: var(--ink); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; }
+    button, select, input { font: inherit; }
+    button { color: inherit; }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 10px 16px;
+      padding: 12px 18px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--border);
+    }
+    .heading { margin-right: auto; }
+    h1 { margin: 0; font-size: 18px; font-weight: 650; }
+    .subtitle { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .field { display: grid; gap: 3px; color: var(--muted); font-size: 12px; }
+    select { min-width: 280px; padding: 8px 30px 8px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--paper); color: var(--ink); }
+    .control-group { display: inline-flex; min-height: 38px; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .mode-button, .fullscreen-button { min-height: 38px; padding: 7px 12px; border: 1px solid var(--border); background: var(--paper); cursor: pointer; }
+    .mode-button { border: 0; border-right: 1px solid var(--border); }
+    .mode-button:last-child { border-right: 0; }
+    .mode-button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+    .check { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; white-space: nowrap; }
+    .raw-link { display: inline-flex; align-items: center; min-height: 38px; color: var(--ink); text-underline-offset: 3px; }
+    main { padding: 18px; }
+    [hidden] { display: none !important; }
+    .summary { display: flex; flex-wrap: wrap; gap: 8px 18px; max-width: 1600px; margin: 0 auto 14px; color: var(--muted); }
+    .summary strong { color: var(--ink); font-weight: 650; }
+    .stage { position: relative; display: grid; grid-template-columns: minmax(320px, 1fr) var(--canvas-width) minmax(320px, 1fr); gap: 42px; align-items: start; max-width: 1600px; margin: 0 auto; min-height: 852px; }
+    .annotations { position: relative; min-width: 0; z-index: 5; }
+    .prototype { position: relative; z-index: 3; margin: 20px 0 0; width: var(--canvas-width); }
+    .prototype-frame, .all-prototype-frame { position: relative; width: 100%; }
+    .prototype img, .all-prototype-frame img { display: block; width: 100%; height: auto; background: var(--paper); border: 1px solid var(--ink); }
+    .prototype figcaption { padding-top: 8px; color: var(--muted); font-size: 12px; text-align: center; }
+    .inspection-layer { position: absolute; inset: 0; pointer-events: none; }
+    .inspection-target { position: absolute; margin: 0; padding: 0; border: 0; background: transparent; pointer-events: auto; cursor: crosshair; }
+    .inspection-target--hotspot { z-index: 4; }
+    .inspection-target--element { z-index: 3; }
+    .inspection-target.is-highlighted, .inspection-target:hover, .inspection-target:focus-visible { background: color-mix(in srgb, var(--highlight) 58%, transparent); outline: 2px solid var(--highlight-strong); outline-offset: -2px; }
+    .inspection-target--hotspot.is-highlighted, .inspection-target--hotspot:hover, .inspection-target--hotspot:focus-visible { outline-style: dashed; }
+    .leaders { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+    .leader { fill: none; stroke: var(--element); stroke-width: 1; vector-effect: non-scaling-stroke; opacity: .7; }
+    .leader--hotspot { stroke: var(--hotspot); stroke-dasharray: 5 4; }
+    .leader-dot { fill: var(--paper); stroke: var(--element); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+    .leader-dot--hotspot { stroke: var(--hotspot); }
+    .leader.is-highlighted { stroke: var(--highlight-strong); stroke-width: 2.5; opacity: 1; }
+    .leader-dot.is-highlighted { fill: var(--highlight); stroke: var(--highlight-strong); stroke-width: 2.5; }
+    .callout { width: min(100%, 390px); padding: 9px 11px; background: var(--paper); border: 1px solid var(--border); text-align: left; cursor: default; }
+    .annotations .callout { position: absolute; }
+    .annotations--left .callout { right: 0; }
+    .annotations--right .callout { left: 0; }
+    .callout--hotspot { border-left: 3px dashed var(--hotspot); }
+    .callout--element { border-left: 3px solid var(--element); }
+    .callout:hover, .callout:focus-visible, .callout.is-highlighted { background: var(--highlight); border-color: var(--highlight-strong); outline: 1px solid var(--highlight-strong); }
+    .callout__top { display: flex; align-items: baseline; gap: 7px; }
+    .kind { flex: 0 0 auto; color: var(--muted); font-size: 11px; letter-spacing: .04em; }
+    .name { font-weight: 650; }
+    .meta { margin-top: 3px; color: var(--muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+    .detail { display: grid; grid-template-columns: 74px 1fr; gap: 3px 8px; margin-top: 7px; font-size: 12px; }
+    .detail dt { color: var(--muted); }
+    .detail dd { margin: 0; }
+    .optional-detail { margin-top: 7px; padding-top: 7px; border-top: 1px dotted var(--border); }
+    .empty { position: absolute; top: 20px; padding: 10px; color: var(--muted); border: 1px dashed var(--border); }
+    .legend { max-width: 1600px; margin: 18px auto 0; padding-top: 12px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+    .legend span { display: inline-block; margin-right: 18px; }
+    .legend-element::before, .legend-hotspot::before { content: ""; display: inline-block; width: 24px; margin-right: 6px; vertical-align: 3px; border-top: 1px solid var(--element); }
+    .legend-hotspot::before { border-top: 1px dashed var(--hotspot); }
+    .all-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(660px, 1fr)); gap: 18px; width: 100%; }
+    .state-panel { min-width: 0; padding: 14px; background: var(--paper); border: 1px solid var(--border); }
+    .state-panel__header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; margin-bottom: 12px; }
+    .state-panel__title { margin: 0; font-size: 15px; font-weight: 650; }
+    .state-panel__meta { color: var(--muted); font-size: 12px; }
+    .state-panel__layout { display: grid; grid-template-columns: minmax(190px, 240px) minmax(320px, 1fr); gap: 14px; align-items: start; }
+    .all-prototype-frame { align-self: start; }
+    .all-annotations { display: grid; gap: 7px; min-width: 0; }
+    .all-annotations .callout { width: 100%; position: static; }
+    .view-note { margin: 0 0 14px; color: var(--muted); }
+    :fullscreen body { overflow: auto; }
+    :fullscreen .toolbar { top: 0; }
+    :fullscreen main { padding: 14px; }
+    :fullscreen .all-board { grid-template-columns: repeat(auto-fit, minmax(720px, 1fr)); }
+    @media (max-width: 1180px) {
+      .stage { display: flex; flex-direction: column; height: auto !important; }
+      .prototype { order: 1; margin: 20px auto; }
+      .annotations { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 8px; height: auto !important; }
+      .annotations--left { order: 2; }
+      .annotations--right { order: 3; }
+      .annotations .callout { position: static; width: 100%; }
+      .leaders { display: none; }
+      .all-board { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      main, .toolbar { padding: 12px; }
+      .heading, .field, select { width: 100%; }
+      .stage { width: 100%; align-items: stretch; }
+      .prototype { align-self: center; width: 100%; max-width: var(--canvas-width); min-width: 0; }
+      .annotations { grid-template-columns: 1fr; }
+      .state-panel__layout { grid-template-columns: 1fr; }
+      .all-prototype-frame { width: min(100%, 300px); margin: 0 auto; }
+      .all-board { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="heading">
+      <h1>__PRODUCT_NAME__ 产品原型中文标注审查</h1>
+      <div class="subtitle">坐标化低保真原型 · 产品需求字段与按需补充信息</div>
+    </div>
+    <label class="field">页面 / 状态
+      <select id="screen-select" aria-label="选择页面和状态"></select>
+    </label>
+    <div class="control-group" role="group" aria-label="画布查看模式">
+      <button id="mode-current" class="mode-button" type="button" aria-pressed="true">当前视图</button>
+      <button id="mode-all" class="mode-button" type="button" aria-pressed="false">全部页面</button>
+    </div>
+    <label class="check"><input id="show-elements" type="checkbox" checked> 页面元素</label>
+    <label class="check"><input id="show-hotspots" type="checkbox" checked> 交互热区</label>
+    <button id="fullscreen-toggle" class="fullscreen-button" type="button">进入全屏</button>
+    <a id="raw-link" class="raw-link" href="#" target="_blank" rel="noopener">打开当前 SVG</a>
+  </header>
+  <main>
+    <section id="current-view">
+      <div id="summary" class="summary" aria-live="polite"></div>
+      <section id="stage" class="stage" aria-label="当前页面及双侧中文标注">
+        <div id="left-annotations" class="annotations annotations--left"></div>
+        <figure class="prototype">
+          <div class="prototype-frame">
+            <img id="prototype-image" alt="">
+            <div id="current-inspection-layer" class="inspection-layer"></div>
+          </div>
+          <figcaption id="prototype-caption"></figcaption>
+        </figure>
+        <div id="right-annotations" class="annotations annotations--right"></div>
+        <svg id="leaders" class="leaders" aria-hidden="true"></svg>
+      </section>
+      <div class="legend">
+        <span class="legend-element">实线：页面元素</span>
+        <span class="legend-hotspot">虚线：交互热区</span>
+        <span>悬浮、键盘聚焦或点击可同步定位</span>
+        <span>坐标：[x, y, width, height] 逻辑点</span>
+      </div>
+    </section>
+    <section id="all-view" hidden>
+      <p class="view-note">全部页面按状态铺展；每个画布右侧显示完整中文标注。可使用浏览器全屏获得最大审查空间。</p>
+      <div id="all-board" class="all-board"></div>
+    </section>
+  </main>
+  <script id="prototype-manifest" type="application/json">__PROTOTYPE_MANIFEST__</script>
+  <script id="chinese-type-labels" type="application/json">__CHINESE_TYPE_LABELS__</script>
+  <script id="chinese-action-labels" type="application/json">__CHINESE_ACTION_LABELS__</script>
+  <script>
+    (() => {
+      const manifest = JSON.parse(document.getElementById('prototype-manifest').textContent);
+      const typeLabels = JSON.parse(document.getElementById('chinese-type-labels').textContent);
+      const actionLabels = JSON.parse(document.getElementById('chinese-action-labels').textContent);
+      const select = document.getElementById('screen-select');
+      const modeCurrent = document.getElementById('mode-current');
+      const modeAll = document.getElementById('mode-all');
+      const showElements = document.getElementById('show-elements');
+      const showHotspots = document.getElementById('show-hotspots');
+      const fullscreenToggle = document.getElementById('fullscreen-toggle');
+      const rawLink = document.getElementById('raw-link');
+      const currentView = document.getElementById('current-view');
+      const allView = document.getElementById('all-view');
+      const stage = document.getElementById('stage');
+      const image = document.getElementById('prototype-image');
+      const currentLayer = document.getElementById('current-inspection-layer');
+      const caption = document.getElementById('prototype-caption');
+      const summary = document.getElementById('summary');
+      const left = document.getElementById('left-annotations');
+      const right = document.getElementById('right-annotations');
+      const leaders = document.getElementById('leaders');
+      const allBoard = document.getElementById('all-board');
+      const screens = manifest.screens.flatMap(screen => screen.states.map(state => ({ screen, state, key: `${screen.id}/${state.id}` })));
+      const roleLabels = { button: '按钮热区', tab: '分页热区', switch: '开关热区', slider: '滑杆热区', radio: '单选热区' };
+      const spaceLabels = { viewport: '固定视口坐标', scrollContent: '滚动内容坐标', overlay: '浮层坐标' };
+      const accuracyLabels = { design_spec: '设计规格坐标', dynamic: '动态坐标', legacy_measured: '沿用实测坐标' };
+      const enabledLabels = {
+        no_conflicting_active_task: '仅在没有冲突的活动任务时可用',
+        task_terminal_or_resolved: '仅在任务已结束或已处理时可用',
+        not_saving: '保存过程中禁用',
+        preview_tools_enabled: '仅在预览工具已启用时可用'
+      };
+      const preserveLabels = {
+        primary_destination: '当前一级页面', scroll: '滚动位置', selection: '当前选择', analysis_tab: '分析分页',
+        records_scroll: '分析记录滚动位置', looks_scroll: '滤镜列表滚动位置', explore_category: '探索分类',
+        explore_scroll: '探索滚动位置', teaching_scroll: '教学滚动位置', album_scroll: '相册滚动位置', home_scroll: '首页滚动位置',
+        category: '分类选择', camera_ratio: '相机画幅', camera_look: '相机滤镜', composition_overlay: '构图框线状态'
+      };
+      let currentMode = 'current';
+      let pinnedKey = null;
+      document.documentElement.style.setProperty('--canvas-width', `${manifest.coordinateSystem.canvas.width}px`);
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[character]);
+      }
+      function resolvePointer(pointer) {
+        return pointer.slice(2).split('/').reduce((value, rawKey) => value[rawKey.replaceAll('~1', '/').replaceAll('~0', '~')], manifest);
+      }
+      function expanded(entry) {
+        const elements = [];
+        const hotspots = [];
+        (entry.state.componentRefs || []).forEach(pointer => {
+          const component = resolvePointer(pointer);
+          (component.elements || []).forEach(item => elements.push({ ...item, componentFixed: component.fixed === true }));
+          (component.hotspots || []).forEach(item => hotspots.push({ ...item, componentFixed: component.fixed === true }));
+        });
+        entry.state.elements.forEach(item => elements.push({ ...item, componentFixed: false }));
+        entry.state.hotspots.forEach(item => hotspots.push({ ...item, componentFixed: false }));
+        return { elements, hotspots };
+      }
+      function currentScreen() { return screens.find(entry => entry.key === select.value) || screens[0]; }
+      function rectText(rect) { return `[${rect.join(', ')}]`; }
+      function chineseTarget(item) {
+        if (!item.targetScreen) return '无页面跳转';
+        const screen = manifest.screens.find(candidate => candidate.id === item.targetScreen);
+        const state = screen && item.targetState ? screen.states.find(candidate => candidate.id === item.targetState) : null;
+        return state ? `${screen.title}／${state.title.split(' / ').pop()}` : (screen ? screen.title : item.targetScreen);
+      }
+      function elementName(item) {
+        const first = String(item.description || '').split(/[；。]/)[0].trim();
+        return first || '页面结构元素';
+      }
+      function interactionText(item, kind, data) {
+        if (kind === 'hotspot') return `${actionLabels[item.action]}；目标：${chineseTarget(item)}`;
+        const matching = data.hotspots.filter(hotspot => hotspot.rect.join(',') === item.rect.join(',')).map(hotspot => hotspot.label);
+        return matching.length ? `由同区域交互热区“${matching.join('、')}”响应操作` : '仅承担信息或布局展示，不直接响应操作';
+      }
+      function dataSourceText(item) {
+        const id = item.id;
+        if (/camera_(viewfinder|frame|focus)|live_preview/.test(`${id}_${item.type || ''}`)) return '设备摄像头实时画面';
+        if (/album|photo_detail|recent_photo/.test(id)) return '用户本地相册与拍摄结果';
+        if (/analysis_record|home_recent|analysis_result/.test(id)) return '本地分析记录或当前分析结果';
+        if (/explore|case|lesson|teaching/.test(id)) return '应用内置案例与教学内容';
+        if (/quota|entitlement|purchase|paywall|restore|plan/.test(id)) return '本地权益状态或购买服务返回状态';
+        if (/title|heading|copy|note|label|banner/.test(`${id}_${item.type || ''}`)) return '产品本地化文案与当前页面状态';
+        if (/image|thumbnail|palette|placeholder/.test(`${id}_${item.type || ''}`)) return '对应业务内容或内置占位资源';
+        return '页面静态配置或关联业务状态；当前原型未声明更细的数据接口';
+      }
+      function displayContentText(item, kind) {
+        if (kind === 'hotspot') return `可见名称或无障碍文案：“${item.label}”；数据来源：产品本地化资源。`;
+        const content = String(item.description || elementName(item)).replace(/[。；]+$/g, '');
+        return `${content}；数据来源：${dataSourceText(item)}。`;
+      }
+      function displayConditionText(item, kind, stateTitle) {
+        const parts = [`仅在页面状态“${stateTitle}”中展示`];
+        if (item.componentFixed) parts.push('属于公共固定区域');
+        if (kind === 'hotspot' && item.enabledWhen) parts.push(enabledLabels[item.enabledWhen] || `满足条件 ${item.enabledWhen} 时可用`);
+        if (item.selectedByDefault === true) parts.push('进入页面时默认选中或开启');
+        return `${parts.join('；')}。`;
+      }
+      function stateSetText(item, kind, stateTitle) {
+        const states = [`当前覆盖“${stateTitle}”状态`];
+        if (kind === 'hotspot') states.push('默认', '悬浮/聚焦', '按下');
+        if (item.enabledWhen) states.push('禁用');
+        if (item.selectedByDefault || ['tab', 'switch', 'radio'].includes(item.role)) states.push('选中/未选中');
+        return `${[...new Set(states)].join('、')}；未列出的内部状态沿用页面级规则。`;
+      }
+      function adaptationText(item) {
+        const parts = [];
+        if (item.coordinateSpace === 'viewport') parts.push('固定在视口坐标中，不随普通内容滚动');
+        else if (item.coordinateSpace === 'scrollContent') parts.push('随页面内容滚动');
+        else parts.push('按浮层坐标覆盖在页面内容上方');
+        if (item.rect[2] >= 320) parts.push('横向宽度随设备内容区等比适配并保留页面边距');
+        else parts.push('在窄屏保持相对位置，宽屏由所属布局重新分配空间');
+        if (/text|title|heading|copy|version/.test(`${item.type || ''}_${item.id}`)) parts.push('大字体时允许纵向增高，长文案按页面级截断或换行规则处理');
+        return `${parts.join('；')}。`;
+      }
+      function optionalDetails(item, kind) {
+        const rows = [];
+        const signature = `${item.id}_${item.action || ''}_${item.type || ''}`;
+        if (/quota|paywall|purchase|restore|entitlement|locked|permission|system_settings/.test(signature)) rows.push(['权限与额度', '受订阅权益、剩余额度或系统权限影响；以当前状态说明和既有业务路线为准。']);
+        if (/retry|task|camera|purchase|restore|analysis_confirm|start_analysis/.test(signature)) rows.push(['异常处理', '异步失败时保留当前上下文，提供当前原型中声明的重试、关闭或返回路径；避免重复创建任务或重复扣减。']);
+        if (kind === 'hotspot') rows.push(['无障碍', `${roleLabels[item.role] || '交互控件'}；朗读“${item.label}”；按视觉顺序进入焦点，最小触控区域 48×48pt。`]);
+        else if (/image|photo|thumbnail|palette|live_preview/.test(`${item.type || ''}_${item.id}`)) rows.push(['无障碍', '有业务含义时提供内容描述；纯装饰或占位资源从无障碍树中排除。']);
+        if (/home_primary_import|camera_shutter|analyze_confirm_start|paywall_purchase|settings_upgrade/.test(item.id)) rows.push(['数据埋点', `记录关键动作“${kind === 'hotspot' ? item.label : elementName(item)}”及来源页面、当前状态和结果，不记录照片内容。`]);
+        if (/date|version|title|heading|copy|text|palette|thumbnail|image/.test(signature)) rows.push(['内容规范', '沿用产品本地化、日期、截断和占位资源规范；不得以颜色作为唯一信息表达。']);
+        if (/task_banner|viewfinder|ratio|bottom_sheet|dialog|masonry|analysis_result/.test(signature)) rows.push(['验收口径', '以 Manifest 坐标、当前状态关系、热区边界和页面级响应式规则联合验收。']);
+        if (item.preserve && item.preserve.length) rows.push(['状态保留', `切换或返回后保留：${item.preserve.map(value => preserveLabels[value] || value).join('、')}。`]);
+        if (item.emphasis === 'primary') rows.push(['操作层级', '主要操作。']);
+        if (item.emphasis === 'secondary') rows.push(['操作层级', '次要操作。']);
+        return rows;
+      }
+      function makeItems(entry) {
+        const data = expanded(entry);
+        const items = [];
+        if (showElements.checked) data.elements.forEach((item, index) => items.push({
+          ...item, kind: 'element', order: index + 1, uid: `${entry.key}|element|${item.id}`, scopeKey: entry.key,
+          title: elementName(item), chineseType: typeLabels[item.type], displayContent: displayContentText(item, 'element'),
+          displayCondition: displayConditionText(item, 'element', entry.state.title), interactionResult: interactionText(item, 'element', data),
+          stateSet: stateSetText(item, 'element', entry.state.title), adaptation: adaptationText(item), optional: optionalDetails(item, 'element')
+        }));
+        if (showHotspots.checked) data.hotspots.forEach((item, index) => items.push({
+          ...item, kind: 'hotspot', order: index + 1, uid: `${entry.key}|hotspot|${item.id}`, scopeKey: entry.key,
+          title: item.label, chineseType: roleLabels[item.role] || '交互热区', displayContent: displayContentText(item, 'hotspot'),
+          displayCondition: displayConditionText(item, 'hotspot', entry.state.title), interactionResult: interactionText(item, 'hotspot', data),
+          stateSet: stateSetText(item, 'hotspot', entry.state.title), adaptation: adaptationText(item), optional: optionalDetails(item, 'hotspot')
+        }));
+        const sideCount = { left: 0, right: 0 };
+        items.forEach(item => {
+          const center = item.rect[0] + item.rect[2] / 2;
+          const spansCenter = item.rect[0] < 140 && item.rect[0] + item.rect[2] > 253;
+          item.side = spansCenter || Math.abs(center - manifest.coordinateSystem.canvas.width / 2) < 36
+            ? (sideCount.left <= sideCount.right ? 'left' : 'right')
+            : (center < manifest.coordinateSystem.canvas.width / 2 ? 'left' : 'right');
+          sideCount[item.side] += 1;
+        });
+        return { data, items };
+      }
+      function calloutMarkup(item) {
+        const prefix = item.kind === 'hotspot' ? `热区 H${String(item.order).padStart(2, '0')}` : `元素 E${String(item.order).padStart(2, '0')}`;
+        const optional = item.optional.length
+          ? `<dl class="detail optional-detail">${item.optional.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}</dl>`
+          : '';
+        return `<div class="callout__top"><span class="kind">${prefix}</span><span class="name">${escapeHtml(item.title)}</span></div>
+          <div class="meta">稳定 ID：${escapeHtml(item.id)} · 类型：${escapeHtml(item.chineseType)}<br>位置：${escapeHtml(rectText(item.rect))} · ${escapeHtml(spaceLabels[item.coordinateSpace] || item.coordinateSpace)} · ${escapeHtml(accuracyLabels[item.accuracy] || item.accuracy)}</div>
+          <dl class="detail"><dt>展示内容</dt><dd>${escapeHtml(item.displayContent)}</dd><dt>展示条件</dt><dd>${escapeHtml(item.displayCondition)}</dd><dt>交互结果</dt><dd>${escapeHtml(item.interactionResult)}</dd><dt>状态集合</dt><dd>${escapeHtml(item.stateSet)}</dd><dt>适配规则</dt><dd>${escapeHtml(item.adaptation)}</dd></dl>${optional}`;
+      }
+      function calloutNode(item, extraClass = '') {
+        const node = document.createElement('button');
+        node.type = 'button';
+        node.className = `callout callout--${item.kind} ${extraClass}`.trim();
+        node.dataset.syncKey = item.uid;
+        node.dataset.kind = item.kind;
+        node.dataset.side = item.side;
+        node.dataset.rect = item.rect.join(',');
+        node.dataset.scopeKey = item.scopeKey;
+        node.setAttribute('aria-label', `定位${item.title}`);
+        node.innerHTML = calloutMarkup(item);
+        return node;
+      }
+      function createInspectionTargets(container, items, contentHeight) {
+        container.replaceChildren();
+        items.forEach(item => {
+          const target = document.createElement('button');
+          target.type = 'button';
+          target.className = `inspection-target inspection-target--${item.kind}`;
+          target.dataset.syncKey = item.uid;
+          target.dataset.scopeKey = item.scopeKey;
+          target.dataset.rect = item.rect.join(',');
+          target.setAttribute('aria-label', `${item.kind === 'hotspot' ? '交互热区' : '页面元素'}：${item.title}`);
+          target.style.left = `${item.rect[0] / manifest.coordinateSystem.canvas.width * 100}%`;
+          target.style.top = `${item.rect[1] / contentHeight * 100}%`;
+          target.style.width = `${item.rect[2] / manifest.coordinateSystem.canvas.width * 100}%`;
+          target.style.height = `${item.rect[3] / contentHeight * 100}%`;
+          container.append(target);
+        });
+      }
+      function createCurrentCallouts(items) {
+        left.replaceChildren();
+        right.replaceChildren();
+        items.forEach(item => (item.side === 'left' ? left : right).append(calloutNode(item)));
+      }
+      function layoutSide(container, phoneTop, scale, stageHeight) {
+        const nodes = [...container.querySelectorAll('.callout')];
+        if (!nodes.length) { container.innerHTML = '<div class="empty">当前筛选没有标注</div>'; return; }
+        const gap = 8;
+        const entries = nodes.map(node => {
+          const rect = node.dataset.rect.split(',').map(Number);
+          const height = node.offsetHeight;
+          return { node, rect, height, desired: phoneTop + (rect[1] + rect[3] / 2) * scale - height / 2 };
+        }).sort((a, b) => a.desired - b.desired);
+        let cursor = 10;
+        entries.forEach(entry => { entry.top = Math.max(cursor, entry.desired); cursor = entry.top + entry.height + gap; });
+        let nextTop = stageHeight - 10;
+        for (let index = entries.length - 1; index >= 0; index -= 1) {
+          const entry = entries[index];
+          entry.top = Math.min(entry.top, nextTop - entry.height);
+          nextTop = entry.top - gap;
+        }
+        if (entries[0].top < 10) {
+          const shift = 10 - entries[0].top;
+          entries.forEach(entry => { entry.top += shift; });
+        }
+        entries.forEach(entry => { entry.node.style.top = `${entry.top}px`; });
+      }
+      function requiredHeight(container) { return [...container.querySelectorAll('.callout')].reduce((total, node) => total + node.offsetHeight + 8, 20); }
+      function svgNode(name, attributes) {
+        const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+        Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, value));
+        return node;
+      }
+      function drawLeaders() {
+        leaders.replaceChildren();
+        if (matchMedia('(max-width:1180px)').matches || currentMode !== 'current') return;
+        const stageRect = stage.getBoundingClientRect();
+        const imageRect = image.getBoundingClientRect();
+        const scale = imageRect.width / manifest.coordinateSystem.canvas.width;
+        leaders.setAttribute('viewBox', `0 0 ${stage.clientWidth} ${stage.clientHeight}`);
+        leaders.setAttribute('width', stage.clientWidth);
+        leaders.setAttribute('height', stage.clientHeight);
+        document.querySelectorAll('#current-view .callout[data-rect]').forEach(node => {
+          const rect = node.dataset.rect.split(',').map(Number);
+          const calloutRect = node.getBoundingClientRect();
+          const side = node.dataset.side;
+          const startX = side === 'left' ? calloutRect.right - stageRect.left : calloutRect.left - stageRect.left;
+          const startY = calloutRect.top - stageRect.top + calloutRect.height / 2;
+          const targetX = imageRect.left - stageRect.left + (side === 'left' ? rect[0] : rect[0] + rect[2]) * scale;
+          const targetY = imageRect.top - stageRect.top + (rect[1] + rect[3] / 2) * scale;
+          const elbowX = side === 'left' ? imageRect.left - stageRect.left - 16 : imageRect.right - stageRect.left + 16;
+          const hot = node.dataset.kind === 'hotspot';
+          leaders.append(svgNode('polyline', { points: `${startX},${startY} ${elbowX},${startY} ${elbowX},${targetY} ${targetX},${targetY}`, class: `leader${hot ? ' leader--hotspot' : ''}`, 'data-sync-key': node.dataset.syncKey }));
+          leaders.append(svgNode('circle', { cx: targetX, cy: targetY, r: 3, class: `leader-dot${hot ? ' leader-dot--hotspot' : ''}`, 'data-sync-key': node.dataset.syncKey }));
+        });
+      }
+      function layoutCurrent() {
+        if (matchMedia('(max-width:1180px)').matches) {
+          stage.style.height = 'auto'; left.style.height = 'auto'; right.style.height = 'auto'; leaders.replaceChildren(); return;
+        }
+        const scale = image.clientWidth / manifest.coordinateSystem.canvas.width;
+        const phoneHeight = image.clientHeight + image.offsetTop + 40;
+        const stageHeight = Math.max(phoneHeight, requiredHeight(left), requiredHeight(right), 852);
+        stage.style.height = `${stageHeight}px`;
+        left.style.height = `${stageHeight}px`;
+        right.style.height = `${stageHeight}px`;
+        layoutSide(left, image.offsetTop, scale, stageHeight);
+        layoutSide(right, image.offsetTop, scale, stageHeight);
+        drawLeaders();
+      }
+      function renderCurrent() {
+        const entry = currentScreen();
+        const { data, items } = makeItems(entry);
+        const canvasKind = entry.state.contentHeight === manifest.coordinateSystem.canvas.height ? '单屏画布' : '完整滚动画布';
+        image.src = entry.state.prototypeFile;
+        image.alt = `${entry.state.title}低保真坐标原型`;
+        caption.textContent = `${entry.state.title} · ${entry.state.contentHeight}pt ${canvasKind}`;
+        rawLink.href = entry.state.prototypeFile;
+        summary.innerHTML = `<span><strong>${escapeHtml(entry.screen.title)}</strong></span><span>状态：${escapeHtml(entry.state.title.split(' / ').pop())}</span><span>页面元素：${data.elements.length}</span><span>交互热区：${data.hotspots.length}</span><span>坐标精度：${escapeHtml(accuracyLabels[entry.state.accuracy] || entry.state.accuracy)}</span>`;
+        createCurrentCallouts(items);
+        createInspectionTargets(currentLayer, items, entry.state.contentHeight);
+        image.onload = () => requestAnimationFrame(layoutCurrent);
+        requestAnimationFrame(layoutCurrent);
+      }
+      function renderAll() {
+        allBoard.replaceChildren();
+        screens.forEach(entry => {
+          const { data, items } = makeItems(entry);
+          const panel = document.createElement('article');
+          panel.className = 'state-panel';
+          const header = document.createElement('header');
+          header.className = 'state-panel__header';
+          header.innerHTML = `<h2 class="state-panel__title">${escapeHtml(entry.state.title)}</h2><div class="state-panel__meta">${entry.state.contentHeight}pt · ${data.elements.length} 个元素 · ${data.hotspots.length} 个热区</div>`;
+          const layout = document.createElement('div');
+          layout.className = 'state-panel__layout';
+          const frame = document.createElement('div');
+          frame.className = 'all-prototype-frame';
+          const panelImage = document.createElement('img');
+          panelImage.loading = 'lazy';
+          panelImage.src = entry.state.prototypeFile;
+          panelImage.alt = `${entry.state.title}低保真坐标原型`;
+          const layer = document.createElement('div');
+          layer.className = 'inspection-layer';
+          createInspectionTargets(layer, items, entry.state.contentHeight);
+          frame.append(panelImage, layer);
+          const annotations = document.createElement('div');
+          annotations.className = 'all-annotations';
+          items.forEach(item => annotations.append(calloutNode(item)));
+          if (!items.length) annotations.innerHTML = '<div class="empty">当前筛选没有标注</div>';
+          layout.append(frame, annotations);
+          panel.append(header, layout);
+          allBoard.append(panel);
+        });
+      }
+      function setMode(mode, updateUrl = true) {
+        currentMode = mode;
+        const isCurrent = mode === 'current';
+        modeCurrent.setAttribute('aria-pressed', String(isCurrent));
+        modeAll.setAttribute('aria-pressed', String(!isCurrent));
+        currentView.hidden = !isCurrent;
+        allView.hidden = isCurrent;
+        select.disabled = !isCurrent;
+        rawLink.hidden = !isCurrent;
+        pinnedKey = null;
+        clearHighlight();
+        if (updateUrl) {
+          const url = new URL(location.href);
+          if (isCurrent) url.searchParams.delete('view'); else url.searchParams.set('view', 'all');
+          history.replaceState(null, '', url);
+        }
+        if (isCurrent) renderCurrent(); else renderAll();
+      }
+      function nodesForKey(key) { return [...document.querySelectorAll('[data-sync-key]')].filter(node => node.dataset.syncKey === key); }
+      function clearHighlight() { document.querySelectorAll('.is-highlighted').forEach(node => node.classList.remove('is-highlighted')); }
+      function highlight(key) {
+        clearHighlight();
+        if (!key) return;
+        const source = nodesForKey(key).find(node => node.dataset.rect && node.dataset.scopeKey);
+        const relatedKeys = new Set([key]);
+        if (source) {
+          document.querySelectorAll('[data-sync-key][data-rect][data-scope-key]').forEach(node => {
+            if (node.dataset.scopeKey === source.dataset.scopeKey && node.dataset.rect === source.dataset.rect) relatedKeys.add(node.dataset.syncKey);
+          });
+        }
+        relatedKeys.forEach(relatedKey => nodesForKey(relatedKey).forEach(node => node.classList.add('is-highlighted')));
+      }
+      function interactiveTarget(event) { return event.target.closest('[data-sync-key]'); }
+      document.addEventListener('pointerover', event => {
+        const target = interactiveTarget(event);
+        if (target && !pinnedKey) highlight(target.dataset.syncKey);
+      });
+      document.addEventListener('pointerout', event => {
+        const target = interactiveTarget(event);
+        const next = event.relatedTarget && event.relatedTarget.closest ? event.relatedTarget.closest('[data-sync-key]') : null;
+        if (target && (!next || next.dataset.syncKey !== target.dataset.syncKey) && !pinnedKey) clearHighlight();
+      });
+      document.addEventListener('focusin', event => {
+        const target = interactiveTarget(event);
+        if (target) highlight(target.dataset.syncKey);
+      });
+      document.addEventListener('focusout', event => { if (!pinnedKey && interactiveTarget(event)) clearHighlight(); });
+      document.addEventListener('click', event => {
+        const target = interactiveTarget(event);
+        if (!target) return;
+        pinnedKey = pinnedKey === target.dataset.syncKey ? null : target.dataset.syncKey;
+        highlight(pinnedKey);
+      });
+      modeCurrent.addEventListener('click', () => setMode('current'));
+      modeAll.addEventListener('click', () => setMode('all'));
+      select.addEventListener('change', renderCurrent);
+      showElements.addEventListener('change', () => currentMode === 'current' ? renderCurrent() : renderAll());
+      showHotspots.addEventListener('change', () => currentMode === 'current' ? renderCurrent() : renderAll());
+      fullscreenToggle.addEventListener('click', async () => {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else await document.documentElement.requestFullscreen();
+      });
+      document.addEventListener('fullscreenchange', () => { fullscreenToggle.textContent = document.fullscreenElement ? '退出全屏' : '进入全屏'; });
+      addEventListener('resize', () => { if (currentMode === 'current') requestAnimationFrame(layoutCurrent); });
+      screens.forEach(entry => {
+        const option = document.createElement('option');
+        option.value = entry.key;
+        option.textContent = entry.state.title;
+        select.append(option);
+      });
+      select.value = 'home/default_history';
+      setMode(new URLSearchParams(location.search).get('view') === 'all' ? 'all' : 'current', false);
+    })();
+  </script>
+</body>
+</html>

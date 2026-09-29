@@ -1,0 +1,7 @@
+interface:
+  display_name: "App Store Screenshot Studio"
+  short_description: "分层制作 App Store 商店图：真实界面、双语海报与导出验证"
+  icon_large: "./assets/preview.png"
+  default_prompt: "使用 $artifact-template-app-store-screenshot-studio，为当前 App 制作或迭代分层商店图；先核对功能与现有素材，再规划卖点、真实 UI、双语排版和规格验证。"
+policy:
+  allow_implicit_invocation: true
