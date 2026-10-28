@@ -1,0 +1,13 @@
+interface:
+  display_name: App 官网制作
+  short_description: 复用多产品官网经验，完成品牌展示、下载转化、支持与合规页面
+  default_prompt: 使用 $build-app-official-site，为我的 App 制作官网，先核实产品信息与素材，再完成页面和验收。
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
