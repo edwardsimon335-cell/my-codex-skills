@@ -5,6 +5,7 @@
 ## Skills
 
 - `animate`：为界面与组件设计并实现有目的的动画。
+- `app-prd-html`：按功能编写面向研发的 PRD，结合真实页面、状态对照与动效生成可离线查看的交互 HTML。
 - `app-site-seo-geo`：为公开 App 官网构建或审查多语言 SEO 与 AI 搜索可发现性。
 - `artifact-template-app-store-screenshot-studio`：制作与迭代 App Store 商店截图及宣传图。
 - `emil-design-eng`：面向 UI 打磨、组件设计和动效决策的设计工程指南。

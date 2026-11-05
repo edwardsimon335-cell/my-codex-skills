@@ -1,0 +1,36 @@
+{
+  "document_id": "reading-app-offline-v1",
+  "project": "阅读 App",
+  "title": "离线阅读功能需求",
+  "background": ["当前文章支持在线阅读，网络不可用时无法打开内容。收藏与离线保存尚未区分。"],
+  "goals": ["新增文章离线保存和管理入口，展示下载状态，支持无网络阅读与手动移除，并保留现有收藏行为。"],
+  "sections": [
+    {
+      "id": "save-entry", "title": "离线保存入口", "status": "todo",
+      "blocks": [
+        {"type": "table", "columns": ["入口", "触发条件", "交互"], "rows": [
+          {"cells": ["文章详情", "在线且未离线保存", "点击保存，展示下载中状态；成功后提示已保存。"]},
+          {"cells": ["文章详情", "内容已保存", "显示已保存，重复点击不重复下载。"]}
+        ]},
+        {"type": "text", "paragraphs": ["保存失败保留文章页面，展示重试入口。收藏状态不随离线保存改变。"], "note": "页面待补充：当前项目的未保存、保存中、已保存和失败状态。"}
+      ]
+    },
+    {
+      "id": "offline-reading", "title": "离线阅读与管理", "status": "todo",
+      "blocks": [
+        {"type": "table", "columns": ["能力", "当前行为", "本次变化"], "rows": [
+          {"cells": ["无网络阅读", "无法加载文章", "可打开已保存内容。"]},
+          {"cells": ["存储管理", "无入口", "列表显示已保存文章，支持移除；移除不取消收藏。"]}
+        ]}
+      ]
+    },
+    {
+      "id": "content-service", "title": "离线内容接口", "status": "needs-info",
+      "blocks": [
+        {"type": "text", "paragraphs": ["客户端按接口获取可离线保存的文章内容。内容更新与失效规则待接口文档补充。"]},
+        {"type": "links", "items": [{"id": "content-api", "title": "内容接口文档", "url": ""}]}
+      ]
+    }
+  ],
+  "media": {}
+}

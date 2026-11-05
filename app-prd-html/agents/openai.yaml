@@ -1,0 +1,4 @@
+interface:
+  display_name: "App 功能需求 PRD"
+  short_description: "按功能编写简洁 PRD，结合真实页面、状态对照与动效生成可交互 HTML。"
+  default_prompt: "使用 $app-prd-html，为当前 App 编写简洁的功能需求文档，复用真实页面并发布到统一需求目录，保留可离线查看的交互 HTML。"
