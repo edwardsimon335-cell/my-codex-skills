@@ -29,6 +29,16 @@ def strings(value, name, nonempty=True):
             and all(isinstance(s, str) for s in value), f'{name}: expected string array')
 
 
+def list_items(value, name):
+    require(isinstance(value, list) and value, f'{name}: nonempty list required')
+    for item in value:
+        if isinstance(item, str):
+            continue
+        require(isinstance(item, dict) and isinstance(item.get('text'), str)
+                and item['text'].strip(), f'{name}: expected text or nested item')
+        list_items(item.get('children'), name + ' children')
+
+
 class SavedDocument(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -101,11 +111,25 @@ def validate(data):
             kind = block.get('type')
             if kind == 'text':
                 strings(block.get('paragraphs'), 'paragraphs')
+            elif kind == 'list':
+                list_items(block.get('items'), 'list items')
+                require(isinstance(block.get('ordered', False), bool), 'ordered must be boolean')
+            elif kind == 'illustrated':
+                refs(block.get('media'))
+                require(len(block['media']) <= 2, 'illustrated supports 1–2 pages')
+                require(isinstance(block.get('groups'), list) and block['groups'], 'illustrated groups required')
+                for group in block['groups']:
+                    list_items(group.get('items'), 'group items')
             elif kind == 'table':
                 strings(block.get('columns'), 'columns')
                 require(isinstance(block.get('rows'), list) and block['rows'], 'table rows required')
                 for row in block['rows']:
-                    strings(row.get('cells'), 'cells')
+                    require(isinstance(row.get('cells'), list) and row['cells'], 'Table cells required')
+                    for cell in row['cells']:
+                        if isinstance(cell, list):
+                            list_items(cell, 'cell list')
+                        else:
+                            require(isinstance(cell, str), 'Cell must be text or string array')
                     require(len(row['cells']) == len(block['columns']), 'Table column count mismatch')
                     if row.get('media'):
                         refs(row['media'])

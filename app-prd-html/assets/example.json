@@ -2,33 +2,120 @@
   "document_id": "reading-app-offline-v1",
   "project": "阅读 App",
   "title": "离线阅读功能需求",
-  "background": ["当前文章支持在线阅读，网络不可用时无法打开内容。收藏与离线保存尚未区分。"],
-  "goals": ["新增文章离线保存和管理入口，展示下载状态，支持无网络阅读与手动移除，并保留现有收藏行为。"],
+  "background": [
+    "当前文章支持在线阅读，网络不可用时无法打开内容。收藏与离线保存尚未区分。"
+  ],
+  "goals": [
+    "新增文章离线保存和管理入口，展示下载状态，支持无网络阅读与手动移除，并保留现有收藏行为。"
+  ],
   "sections": [
     {
-      "id": "save-entry", "title": "离线保存入口", "status": "todo",
+      "id": "save-entry",
+      "title": "离线保存入口",
+      "status": "todo",
       "blocks": [
-        {"type": "table", "columns": ["入口", "触发条件", "交互"], "rows": [
-          {"cells": ["文章详情", "在线且未离线保存", "点击保存，展示下载中状态；成功后提示已保存。"]},
-          {"cells": ["文章详情", "内容已保存", "显示已保存，重复点击不重复下载。"]}
-        ]},
-        {"type": "text", "paragraphs": ["保存失败保留文章页面，展示重试入口。收藏状态不随离线保存改变。"], "note": "页面待补充：当前项目的未保存、保存中、已保存和失败状态。"}
+        {
+          "type": "list",
+          "title": "主要流程",
+          "items": [
+            "打开在线文章，点击离线保存。",
+            "下载完成后显示已保存，可在离线列表查看。"
+          ],
+          "ordered": true
+        },
+        {
+          "type": "list",
+          "title": "页面交互逻辑",
+          "items": [
+            {
+              "text": "保存按钮随状态变化。",
+              "children": [
+                "未保存：点击开始下载。",
+                "保存中：展示进度，防止重复点击。",
+                "已保存：展示已保存状态，不重复下载。"
+              ]
+            }
+          ],
+          "ordered": false,
+          "note": "页面待补充：当前项目的未保存、保存中、已保存和失败状态。"
+        },
+        {
+          "type": "list",
+          "title": "边界场景",
+          "items": [
+            "下载失败时保留当前文章，提供重试入口。"
+          ],
+          "ordered": false
+        },
+        {
+          "type": "list",
+          "title": "其他内容",
+          "items": [
+            "收藏状态不随离线保存改变。"
+          ],
+          "ordered": false
+        }
       ]
     },
     {
-      "id": "offline-reading", "title": "离线阅读与管理", "status": "todo",
+      "id": "offline-reading",
+      "title": "离线阅读与管理",
+      "status": "todo",
       "blocks": [
-        {"type": "table", "columns": ["能力", "当前行为", "本次变化"], "rows": [
-          {"cells": ["无网络阅读", "无法加载文章", "可打开已保存内容。"]},
-          {"cells": ["存储管理", "无入口", "列表显示已保存文章，支持移除；移除不取消收藏。"]}
-        ]}
+        {
+          "type": "list",
+          "title": "主要流程",
+          "items": [
+            "进入已保存列表，选择文章阅读。",
+            "在管理入口确认移除离线内容。"
+          ],
+          "ordered": true
+        },
+        {
+          "type": "list",
+          "title": "页面交互逻辑",
+          "items": [
+            {
+              "text": "列表中的每项展示文章标题与保存状态。",
+              "children": [
+                "点击条目打开本机已保存内容。",
+                "移除后从离线列表消失，不取消收藏。"
+              ]
+            }
+          ],
+          "ordered": false
+        },
+        {
+          "type": "list",
+          "title": "边界场景",
+          "items": [
+            "无网络且没有已保存内容时显示空态，不展示虚构文章。"
+          ],
+          "ordered": false
+        }
       ]
     },
     {
-      "id": "content-service", "title": "离线内容接口", "status": "needs-info",
+      "id": "content-service",
+      "title": "离线内容接口",
+      "status": "needs-info",
       "blocks": [
-        {"type": "text", "paragraphs": ["客户端按接口获取可离线保存的文章内容。内容更新与失效规则待接口文档补充。"]},
-        {"type": "links", "items": [{"id": "content-api", "title": "内容接口文档", "url": ""}]}
+        {
+          "type": "text",
+          "paragraphs": [
+            "客户端按接口获取可离线保存的文章内容。内容更新与失效规则待接口文档补充。"
+          ]
+        },
+        {
+          "type": "links",
+          "items": [
+            {
+              "id": "content-api",
+              "title": "内容接口文档",
+              "url": ""
+            }
+          ]
+        }
       ]
     }
   ],
